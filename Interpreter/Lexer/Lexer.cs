@@ -2,6 +2,7 @@
 using Interpreter.Tokens;
 using System.Collections.Generic;
 using System.Text;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Interpreter.Lexer
 {
@@ -16,7 +17,7 @@ namespace Interpreter.Lexer
         // Next reading position in input
         // Points to next character
         public int ReadPosition { get; set; }
-        
+
         // Current character under examination
         // Pointed by Position
         public char Ch { get; set; }
@@ -29,45 +30,106 @@ namespace Interpreter.Lexer
 
         public Token NextToken()
         {
-            Token next = null;
+            Token next;
+
+            SkipWhiteSpace();
 
             switch (Ch)
             {
                 case '=':
-                    next = new Token(Token.ASSIGN, Ch);
+                    next = new Token(Token.ASSIGN, Ch.ToString());
                     break;
                 case ';':
-                    next = new Token(Token.SEMICOLON, Ch);
+                    next = new Token(Token.SEMICOLON, Ch.ToString());
                     break;
                 case '(':
-                    next = new Token(Token.LPAREN, Ch);
+                    next = new Token(Token.LPAREN, Ch.ToString());
                     break;
                 case ')':
-                    next = new Token(Token.RPAREN, Ch);
+                    next = new Token(Token.RPAREN, Ch.ToString());
                     break;
                 case ',':
-                    next = new Token(Token.COMMA, Ch);
+                    next = new Token(Token.COMMA, Ch.ToString());
                     break;
                 case '+':
-                    next = new Token(Token.PLUS, Ch);
+                    next = new Token(Token.PLUS, Ch.ToString());
                     break;
                 case '{':
-                    next = new Token(Token.LBRACE, Ch);
+                    next = new Token(Token.LBRACE, Ch.ToString());
                     break;
                 case '}':
-                    next = new Token(Token.RBRACE, Ch);
+                    next = new Token(Token.RBRACE, Ch.ToString());
                     break;
                 case '\0':
-                    next = new Token(Token.EOF, '\0');
+                    next = new Token(Token.EOF, '\0'.ToString());
                     break;
 
                 default:
+                    if (IsLetter(Ch))
+                    {
+                        string literal = ReadIdentifier();
+                        string type = Token.LookupIdentifier(literal);
+                        next = new Token(type, literal);
+                        return next;
+                    } 
+                    else if (IsDigit(Ch))
+                    {
+                        string type = Token.INT;
+                        string literal = ReadNumber();
+                        next = new Token(type, literal);
+                        return next; 
+                    }
+                    else
+                    {
+                        next = new Token(Token.ILLEGAL, Ch.ToString());
+                    }
+
                     break;
             }
 
             ReadChar();
 
             return next;
+        }
+
+        #region Private Methods
+
+        private bool IsLetter(char ch)
+        {
+            bool isLetter = ('a' <= ch && ch >= 'z') || ('A' <= ch && ch >= 'Z') || ch == '_';
+
+            return isLetter;
+        }
+
+        private string ReadIdentifier()
+        {
+            int start = Position;
+
+            while (IsLetter(Ch))
+                ReadChar();
+
+            int length = Position - start;
+
+            return Input.Substring(start, length);
+        }
+
+        private bool IsDigit(char ch)
+        {
+            bool isDigit = char.IsDigit(ch);
+
+            return isDigit;
+        }
+
+        private string ReadNumber()
+        {
+            int start = Position;
+
+            while (IsDigit(Ch)) 
+                ReadChar();
+
+            int length = Position - start;
+
+            return Input.Substring(start, length);
         }
 
         private void ReadChar()
@@ -82,10 +144,26 @@ namespace Interpreter.Lexer
             {
                 Ch = Input[ReadPosition];
             }
-             
+
             Position = ReadPosition;
             ReadPosition++;
         }
 
+        /* <summary>
+           If whitespace, advance to next character. A whitespace is set of following characters.
+            ' '      space 
+            '\t'     horizontal tab 
+            '\n'     newline
+            '\v'     vertical tab 
+            '\f'     feed 
+            '\r'     carriage return 
+        </summary> */
+        private void SkipWhiteSpace()
+        {
+            while (char.IsWhiteSpace(Ch))
+                ReadChar();
+        }
+
+        #endregion
     }
 }
