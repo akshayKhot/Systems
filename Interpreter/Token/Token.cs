@@ -41,14 +41,17 @@ namespace Interpreter.Tokens
 
         public Token() { }
 
+        // Create a token given its type and literal
         public Token(string type, string literal)
         {
             Type = type;
             Literal = literal;
         }
 
+        // Token.Assign, Token.SemiColon, etc. 
         public string Type { get; set; }
 
+        // Actual value in the source code
         public string Literal { get; set; }
 
         // Check if the given identifier is a keyword.

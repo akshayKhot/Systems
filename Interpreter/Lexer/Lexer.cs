@@ -97,7 +97,7 @@ namespace Interpreter.Lexer
         private bool IsLetter(char ch)
         {
             bool isLetter = ('a' <= ch && ch >= 'z') || ('A' <= ch && ch >= 'Z') || ch == '_';
-
+            
             return isLetter;
         }
 
